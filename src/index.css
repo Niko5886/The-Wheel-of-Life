@@ -31,9 +31,14 @@ body,
    (цвета на сектора, §6). Тук само уголемяваме зоната за докосване. */
 input[type='range'].wol-range {
   width: 100%;
-  height: 1.6rem;
+  height: 1.7rem; /* мобилен: удобна зона за докосване */
   cursor: pointer;
   touch-action: pan-y;
+}
+@media (min-width: 768px) {
+  input[type='range'].wol-range {
+    height: 1.2rem; /* десктоп: по-компактно */
+  }
 }
 
 body {

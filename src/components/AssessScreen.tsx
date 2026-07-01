@@ -35,36 +35,38 @@ export default function AssessScreen({
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="w-full max-w-5xl"
     >
-      <header className="mb-6 text-center">
-        <h2 className="font-heading text-2xl font-extrabold text-ink md:text-3xl">
+      <header className="mb-3 text-center">
+        <h2 className="font-heading text-xl font-extrabold leading-tight text-ink md:text-2xl">
           Оцени всяка сфера от 0 до 10
         </h2>
-        <p className="mt-1 text-ink/60">0 = незадоволително, 10 = оптимално</p>
+        <p className="mt-0.5 text-sm text-ink/60">
+          0 = незадоволително, 10 = оптимално
+        </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-center lg:gap-8">
         {/* ЛЯВА колона — слайдери */}
-        <ul className="space-y-5 rounded-3xl bg-white/60 p-5 shadow-soft backdrop-blur-sm md:p-6">
+        <ul className="space-y-1.5 rounded-3xl bg-white/60 p-4 shadow-soft backdrop-blur-sm">
           {spheres.map((s, i) => {
             const color = COLOR_BY_ID.get(s.id) ?? '#9CA3AF'
             return (
               <motion.li
                 key={s.id}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.05 + i * 0.05, ease: 'easeOut' }}
+                transition={{ duration: 0.3, delay: 0.04 + i * 0.04, ease: 'easeOut' }}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-2 font-medium text-ink">
+                  <span className="flex items-center gap-2 text-[15px] font-medium leading-tight text-ink">
                     <span
-                      className="inline-block h-3 w-3 shrink-0 rounded-full"
+                      className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                       style={{ backgroundColor: color }}
                     />
                     {s.label}
                   </span>
                   <span
                     data-testid={`score-${s.id}`}
-                    className="min-w-[2.25rem] rounded-lg bg-softbg px-2 py-0.5 text-center font-heading font-bold tabular-nums text-ink"
+                    className="min-w-[2rem] rounded-lg bg-softbg px-2 py-0.5 text-center text-sm font-heading font-bold tabular-nums text-ink"
                   >
                     {s.score}
                   </span>
@@ -77,7 +79,7 @@ export default function AssessScreen({
                   value={s.score}
                   onChange={(e) => onValueChange(s.id, Number(e.target.value))}
                   aria-label={s.label}
-                  className="wol-range mt-2"
+                  className="wol-range mt-0.5"
                   style={{ accentColor: color }}
                 />
               </motion.li>
@@ -86,21 +88,21 @@ export default function AssessScreen({
         </ul>
 
         {/* ДЯСНА колона — колелото на живо (точки + полигон) */}
-        <div className="flex flex-col items-center md:sticky md:top-6">
+        <div className="flex flex-col items-center">
           <WheelSvg
             spheres={spheres}
             mode="interactive"
             withPolygon
             onPointChange={onValueChange}
-            className="h-auto w-full max-w-md"
+            className="h-auto w-full max-w-[20rem]"
           />
-          <p className="mt-2 max-w-xs text-center text-sm text-ink/50">
+          <p className="mt-2 max-w-xs text-center text-xs text-ink/50">
             Движи слайдер или кликни по ос, за да коригираш точката.
           </p>
         </div>
       </div>
 
-      <div className="mt-6 flex justify-center">
+      <div className="mt-3 flex justify-center">
         <button
           type="button"
           onClick={onCalculate}

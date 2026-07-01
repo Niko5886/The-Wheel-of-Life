@@ -35,9 +35,9 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-br from-brand-yellow/50 via-softbg to-brand-green/10 px-4 py-10">
-      <header className="mb-6 text-center">
-        <h1 className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-green bg-clip-text font-heading text-3xl font-extrabold uppercase leading-tight tracking-tight text-transparent md:text-5xl">
+    <div className="flex min-h-screen flex-col items-center bg-gradient-to-br from-brand-yellow/50 via-softbg to-brand-green/10 px-4 py-4">
+      <header className="mb-2 text-center md:mb-3">
+        <h1 className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-green bg-clip-text font-heading text-2xl font-extrabold uppercase leading-tight tracking-tight text-transparent sm:text-3xl">
           Колелото на живота
         </h1>
       </header>
