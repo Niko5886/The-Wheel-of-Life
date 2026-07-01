@@ -30,5 +30,9 @@ export interface Sphere {
   point: number
 }
 
-/** Текуща стъпка в потока (§8): 1 → 2 → 3 → 'result'. */
-export type Step = 1 | 2 | 3 | 'result'
+/**
+ * Текуща стъпка в потока. Стари СТЪПКА 1 (слайдери) и 2 (колело) са слети в
+ * един жив екран 'assess'; клик-корекцията от бивша Стъпка 3 остава на него.
+ * Потокът е: 'assess' → 'result'.
+ */
+export type Step = 'assess' | 'result'

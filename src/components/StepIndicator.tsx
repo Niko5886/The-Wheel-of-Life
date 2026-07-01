@@ -7,14 +7,13 @@ interface StepIndicatorProps {
 }
 
 const STEPS = [
-  { n: 1, label: 'Оценки' },
-  { n: 2, label: 'Колело' },
-  { n: 3, label: 'Точки' },
+  { n: 1, label: 'Оценяване' },
+  { n: 2, label: 'Резултат' },
 ] as const
 
-/** 'result' се третира като „след стъпка 3" → и трите са завършени. */
+/** 'assess' → активна е стъпка 1; 'result' → стъпка 2. */
 function currentIndex(step: Step): number {
-  return step === 'result' ? 4 : step
+  return step === 'result' ? 2 : 1
 }
 
 /**

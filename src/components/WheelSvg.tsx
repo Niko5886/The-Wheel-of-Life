@@ -23,6 +23,8 @@ interface WheelSvgProps {
   mode: WheelMode
   /** Извиква се в режим 'interactive' при клик/drag по ос (нова стойност 0..10). */
   onPointChange?: (id: SphereId, value: number) => void
+  /** Показва полигона на живо и в 'interactive' (за обединения екран 'assess'). */
+  withPolygon?: boolean
   className?: string
 }
 
@@ -81,6 +83,7 @@ export default function WheelSvg({
   spheres,
   mode,
   onPointChange,
+  withPolygon = false,
   className,
 }: WheelSvgProps) {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -90,7 +93,8 @@ export default function WheelSvg({
   const animateGrow = mode === 'draw'
   const isInteractive = mode === 'interactive'
   const showPoints = mode !== 'draw'
-  const showPolygon = mode === 'result'
+  const drawPolygon = mode === 'result' // с анимирано очертаване
+  const showPolygon = drawPolygon || (isInteractive && withPolygon)
 
   // Ъгъл по индекс + етикет/цвят/point — без ъгли „на ръка".
   const axes = spheres.map((s, i) => ({
@@ -239,29 +243,66 @@ export default function WheelSvg({
         />
       ))}
 
-      {/* 4) Полигон (само в 'result') — свързва точките в затворена фигура */}
-      {showPolygon && (
-        <motion.path
-          d={polygonPath(spheres.map((s) => s.point))}
-          fill="url(#wol-wheel-fill)"
-          stroke="#2E2E2E"
-          strokeOpacity={0.55}
-          strokeWidth={2.5}
-          strokeLinejoin="round"
-          initial={{ pathLength: 0, fillOpacity: 0 }}
-          animate={{ pathLength: 1, fillOpacity: 0.28 }}
-          transition={{
-            pathLength: { duration: 0.9, ease: 'easeInOut' },
-            fillOpacity: { delay: 0.7, duration: 0.5 },
-          }}
-        />
-      )}
+      {/* 4) Полигон — свързва точките. В 'result' с анимирано очертаване;
+          на екрана 'assess' (interactive + withPolygon) се обновява на живо. */}
+      {showPolygon &&
+        (drawPolygon ? (
+          <motion.path
+            d={polygonPath(spheres.map((s) => s.point))}
+            fill="url(#wol-wheel-fill)"
+            stroke="#2E2E2E"
+            strokeOpacity={0.55}
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+            initial={{ pathLength: 0, fillOpacity: 0 }}
+            animate={{ pathLength: 1, fillOpacity: 0.28 }}
+            transition={{
+              pathLength: { duration: 0.9, ease: 'easeInOut' },
+              fillOpacity: { delay: 0.7, duration: 0.5 },
+            }}
+          />
+        ) : (
+          <motion.path
+            d={polygonPath(spheres.map((s) => s.point))}
+            fill="url(#wol-wheel-fill)"
+            fillOpacity={0.22}
+            stroke="#2E2E2E"
+            strokeOpacity={0.5}
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          />
+        ))}
 
-      {/* 5) Точки — в 'interactive' и 'result'; позиция по point-стойността */}
+      {/* 5) Точки — винаги видими в 'interactive'/'result'; позиция по point.
+          В 'interactive' се преместват ПЛАВНО (~150ms) при промяна на стойността
+          (напр. при движение на слайдер). */}
       {showPoints &&
         axes.map(({ i, id, color, point }) => {
           const p = pointOnAxis(i, point)
-          return (
+          return isInteractive ? (
+            <motion.circle
+              key={`point-${i}`}
+              data-testid={`point-${id}`}
+              r={9}
+              fill={color}
+              stroke="#ffffff"
+              strokeWidth={2.5}
+              style={{
+                transformBox: 'fill-box',
+                transformOrigin: 'center',
+                cursor: 'grab',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.28))',
+              }}
+              whileHover={{ scale: 1.3 }}
+              whileTap={{ scale: 0.92 }}
+              initial={{ cx: p.x, cy: p.y }}
+              animate={{ cx: p.x, cy: p.y }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+            />
+          ) : (
             <motion.circle
               key={`point-${i}`}
               data-testid={`point-${id}`}
@@ -274,14 +315,11 @@ export default function WheelSvg({
               style={{
                 transformBox: 'fill-box',
                 transformOrigin: 'center',
-                cursor: isInteractive ? 'grab' : 'default',
                 filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.28))',
               }}
-              whileHover={isInteractive ? { scale: 1.3 } : undefined}
-              whileTap={isInteractive ? { scale: 0.92 } : undefined}
-              initial={showPolygon ? { scale: 0, opacity: 0 } : false}
-              animate={showPolygon ? { scale: 1, opacity: 1 } : undefined}
-              transition={{ delay: showPolygon ? 0.6 + i * 0.05 : 0, duration: 0.3 }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.6 + i * 0.05, duration: 0.3 }}
             />
           )
         })}
