@@ -10,10 +10,10 @@ import {
   nearestAxisIndex,
   pointAt,
   pointOnAxis,
-  polygonPath,
   radiusForValue,
   scoreFromPoint,
   sectorPath,
+  smoothClosedPath,
 } from '../lib/geometry'
 
 export type WheelMode = 'draw' | 'interactive' | 'result'
@@ -107,6 +107,10 @@ export default function WheelSvg({
     labelPos: pointAt(axisAngle(i), LABEL_RADIUS),
     tenPos: pointAt(axisAngle(i), TEN_RADIUS),
   }))
+
+  // Върховете на свързващата крива (позициите на точките по стойностите).
+  const wheelPoints = spheres.map((s, i) => pointOnAxis(i, s.point))
+  const curvePath = smoothClosedPath(wheelPoints)
 
   // Клик/drag: определя оста (най-близката при клик; фиксираната при drag),
   // snap-ва радиуса към 0..10 и вдига onPointChange.
@@ -248,7 +252,7 @@ export default function WheelSvg({
       {showPolygon &&
         (drawPolygon ? (
           <motion.path
-            d={polygonPath(spheres.map((s) => s.point))}
+            d={curvePath}
             fill="url(#wol-wheel-fill)"
             stroke="#2E2E2E"
             strokeOpacity={0.55}
@@ -263,7 +267,7 @@ export default function WheelSvg({
           />
         ) : (
           <motion.path
-            d={polygonPath(spheres.map((s) => s.point))}
+            d={curvePath}
             fill="url(#wol-wheel-fill)"
             fillOpacity={0.22}
             stroke="#2E2E2E"

@@ -101,6 +101,38 @@ export function polygonPath(values: number[]): string {
   return `${cmds.join(' ')} Z`
 }
 
+/**
+ * SVG path за ГЛАДКА ЗАТВОРЕНА крива, минаваща ТОЧНО през всяка от точките.
+ * Използва uniform Catmull-Rom spline, преобразуван към cubic Bézier (C),
+ * със затваряне без ъгъл (тангентите съвпадат на връзката край→начало).
+ * Кривината е умерена (коеф. 1/6) — органична форма без примки/изхвърляне.
+ * Заменя правия polygon за резултатното колело; точките не се местят.
+ */
+export function smoothClosedPath(points: Point[]): string {
+  const n = points.length
+  if (n < 3) {
+    return (
+      points
+        .map((p, i) => `${i === 0 ? 'M' : 'L'} ${round(p.x)} ${round(p.y)}`)
+        .join(' ') + ' Z'
+    )
+  }
+  const at = (i: number) => points[((i % n) + n) % n]
+  let d = `M ${round(points[0].x)} ${round(points[0].y)}`
+  for (let i = 0; i < n; i++) {
+    const p0 = at(i - 1)
+    const p1 = at(i)
+    const p2 = at(i + 1)
+    const p3 = at(i + 2)
+    const cp1x = p1.x + (p2.x - p0.x) / 6
+    const cp1y = p1.y + (p2.y - p0.y) / 6
+    const cp2x = p2.x - (p3.x - p1.x) / 6
+    const cp2y = p2.y - (p3.y - p1.y) / 6
+    d += ` C ${round(cp1x)} ${round(cp1y)} ${round(cp2x)} ${round(cp2y)} ${round(p2.x)} ${round(p2.y)}`
+  }
+  return `${d} Z`
+}
+
 /** Ограничава число в интервала [min, max]. */
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
