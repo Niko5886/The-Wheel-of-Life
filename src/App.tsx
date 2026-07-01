@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import Step1Sliders from './components/Step1Sliders'
@@ -8,12 +8,15 @@ import StepIndicator from './components/StepIndicator'
 import Footer from './components/Footer'
 import WheelSvg from './components/WheelSvg'
 import { createInitialSpheres } from './data/spheres'
+import { downloadSvgAsPng } from './lib/exportImage'
 import type { SphereId, Step } from './types'
 
 export default function App() {
   // Споделеният state на приложението (§8).
   const [spheres, setSpheres] = useState(createInitialSpheres)
   const [step, setStep] = useState<Step>(1)
+  // Обвивка около колелото в резултата — за export като PNG.
+  const wheelRef = useRef<HTMLDivElement>(null)
 
   const handleScoreChange = (id: SphereId, score: number) => {
     setSpheres((prev) => prev.map((s) => (s.id === id ? { ...s, score } : s)))
@@ -34,6 +37,10 @@ export default function App() {
   const reset = () => {
     setSpheres(createInitialSpheres())
     setStep(1)
+  }
+  const downloadWheel = () => {
+    const svg = wheelRef.current?.querySelector('svg')
+    if (svg) void downloadSvgAsPng(svg, 'kolelo-na-jivota.png')
   }
 
   return (
@@ -109,8 +116,10 @@ export default function App() {
               transition={{ duration: 0.4, ease: 'easeOut' }}
               className="flex w-full max-w-xl flex-col items-center"
             >
-              <WheelSvg spheres={spheres} mode="result" className="h-auto w-full" />
-              <ResultPanel onReset={reset} />
+              <div ref={wheelRef} className="w-full">
+                <WheelSvg spheres={spheres} mode="result" className="h-auto w-full" />
+              </div>
+              <ResultPanel onReset={reset} onDownload={downloadWheel} />
             </motion.section>
           )}
         </AnimatePresence>

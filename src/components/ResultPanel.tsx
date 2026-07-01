@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { RotateCcw } from 'lucide-react'
+import { Download, RotateCcw } from 'lucide-react'
 
 interface ResultPanelProps {
   onReset: () => void
+  onDownload: () => void
 }
 
 /**
@@ -11,7 +12,7 @@ interface ResultPanelProps {
  * отдолу. Съдържа точния текст на въпросите от PDF-а; вторият има textarea
  * (само локален state, без backend). Долу — „Начертай отново".
  */
-export default function ResultPanel({ onReset }: ResultPanelProps) {
+export default function ResultPanel({ onReset, onDownload }: ResultPanelProps) {
   const [answer, setAnswer] = useState('')
 
   return (
@@ -55,11 +56,19 @@ export default function ResultPanel({ onReset }: ResultPanelProps) {
         </div>
       </div>
 
-      <div className="mt-6 flex justify-center">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={onDownload}
+          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-green to-brand-orange px-6 py-3 font-heading font-bold text-white shadow-soft transition hover:brightness-105 active:scale-[.98]"
+        >
+          <Download size={20} strokeWidth={2.5} />
+          Изтегли като изображение
+        </button>
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-red to-brand-orange px-6 py-3 font-heading font-bold text-white shadow-soft transition hover:brightness-105 active:scale-[.98]"
+          className="inline-flex items-center gap-2 rounded-2xl bg-white/70 px-6 py-3 font-heading font-bold text-ink shadow-soft transition hover:brightness-105 active:scale-[.98]"
         >
           <RotateCcw size={20} strokeWidth={2.5} />
           Начертай отново
