@@ -37,7 +37,7 @@ input[type='range'].wol-range {
 }
 @media (min-width: 768px) {
   input[type='range'].wol-range {
-    height: 1.2rem; /* десктоп: по-компактно */
+    height: 1.05rem; /* десктоп: по-компактно */
   }
 }
 
