@@ -20,7 +20,7 @@ export default function ResultPanel({ onReset, onDownload }: ResultPanelProps) {
       initial={{ opacity: 0, y: 36 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 1.0, duration: 0.5, ease: 'easeOut' }}
-      className="mt-6 w-full max-w-xl rounded-3xl bg-white/70 p-6 shadow-soft backdrop-blur-sm md:p-8"
+      className="w-full max-w-md rounded-3xl bg-white/70 p-6 shadow-soft backdrop-blur-sm md:p-8"
     >
       <h2 className="font-heading text-xl font-extrabold text-ink md:text-2xl">
         Време за размисъл

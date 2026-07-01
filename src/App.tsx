@@ -62,9 +62,9 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="flex w-full max-w-xl flex-col items-center"
+              className="flex w-full max-w-6xl flex-col items-center gap-6 lg:flex-row lg:items-center lg:justify-center lg:gap-12"
             >
-              <div ref={wheelRef} className="w-full">
+              <div ref={wheelRef} className="w-full max-w-[30rem] lg:shrink-0">
                 <WheelSvg spheres={spheres} mode="result" className="h-auto w-full" />
               </div>
               <ResultPanel onReset={reset} onDownload={downloadWheel} />

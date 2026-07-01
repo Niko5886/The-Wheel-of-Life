@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="mt-4 pb-2 text-center text-sm text-ink/60">
       <p>
-        Създадено по идеи на <span className="font-semibold text-ink/80">Юли Тонкин</span>.
+        Създадено по идеи на <span className="font-semibold text-ink/80">Юли Тонкин</span>.С любов към всички, които не чакат, а създават.
       </p>
       <a
         href="https://www.tonkin.bg"
