@@ -48,17 +48,44 @@ export function axisAngle(i: number): number {
  * value = 0 → центъра; value = 10 → външния край (MAX_RADIUS).
  */
 export function pointOnAxis(i: number, value: number): Point {
-  const r = (value / MAX_SCORE) * MAX_RADIUS
-  const a = axisAngle(i)
-  return {
-    x: CENTER.x + r * Math.cos(a),
-    y: CENTER.y + r * Math.sin(a),
-  }
+  return pointAt(axisAngle(i), radiusForValue(value))
 }
 
 /** Крайната точка на ос `i` (при оценка 10) — за рисуване на радиалните линии. */
 export function axisEnd(i: number): Point {
   return pointOnAxis(i, MAX_SCORE)
+}
+
+/** Радиус (px) за оценка `value` (0..10): value 0 → 0, value 10 → MAX_RADIUS. */
+export function radiusForValue(value: number): number {
+  return (value / MAX_SCORE) * MAX_RADIUS
+}
+
+/** Полярна → декартова точка около CENTER: `angle` в радиани, `radius` в px. */
+export function pointAt(angle: number, radius: number): Point {
+  return {
+    x: CENTER.x + radius * Math.cos(angle),
+    y: CENTER.y + radius * Math.sin(angle),
+  }
+}
+
+/** Ъглови граници на сектор i: [center − HALF_STEP, center + HALF_STEP]. */
+export function sectorBounds(i: number): { start: number; end: number } {
+  const a = axisAngle(i)
+  return { start: a - HALF_STEP, end: a + HALF_STEP }
+}
+
+/**
+ * SVG path за пълния клин (pie-slice) на сектор i — от центъра до външния
+ * ръб (радиус `radius`, по подразбиране MAX_RADIUS). Клиновете се редят без
+ * припокриване: краят на сектор i съвпада с началото на i+1 → 7 РАВНИ сектора.
+ */
+export function sectorPath(i: number, radius: number = MAX_RADIUS): string {
+  const { start, end } = sectorBounds(i)
+  const p0 = pointAt(start, radius)
+  const p1 = pointAt(end, radius)
+  // large-arc-flag=0 (клинът е < 180°); sweep-flag=1 (по часовниковата стрелка).
+  return `M ${round(CENTER.x)} ${round(CENTER.y)} L ${round(p0.x)} ${round(p0.y)} A ${radius} ${radius} 0 0 1 ${round(p1.x)} ${round(p1.y)} Z`
 }
 
 /**
