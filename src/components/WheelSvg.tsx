@@ -23,8 +23,8 @@ interface WheelSvgProps {
 const VIEW = 600
 /** Радиус, на който стоят етикетите на секторите (леко извън външния ринг). */
 const LABEL_RADIUS = 258
-/** Радиус, на който стои числото „10" (точно вътре в ринга, върху всяка ос). */
-const TEN_RADIUS = MAX_RADIUS - 18
+/** Радиус, на който стои числото „10" (в горния край на оста, под етикета). */
+const TEN_RADIUS = MAX_RADIUS - 40
 /** Стойности за фините концентрични водещи кръгове (10 съвпада с външния ринг). */
 const GUIDE_VALUES = [2, 4, 6, 8]
 
@@ -148,23 +148,27 @@ export default function WheelSvg({ spheres, mode, className }: WheelSvgProps) {
         />
       ))}
 
-      {/* 4) Числото „10" на външния край на всяка ос */}
+      {/* 4) Числото „10" в горния край на всяка ос (фоново хало за четимост) */}
       {axes.map(({ i, tenPos }) => (
-        <motion.text
+        <motion.g
           key={`ten-${i}`}
-          x={tenPos.x}
-          y={tenPos.y}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={11}
-          fontWeight={700}
-          className="fill-ink/55"
           initial={animateGrow ? { opacity: 0 } : false}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.95 + i * 0.04, duration: 0.3 }}
         >
-          10
-        </motion.text>
+          <circle cx={tenPos.x} cy={tenPos.y} r={10} className="fill-softbg" />
+          <text
+            x={tenPos.x}
+            y={tenPos.y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={11}
+            fontWeight={700}
+            className="fill-ink/70"
+          >
+            10
+          </text>
+        </motion.g>
       ))}
 
       {/* 5) Числото „0" в центъра (общ произход на всичките 7 оси) */}
