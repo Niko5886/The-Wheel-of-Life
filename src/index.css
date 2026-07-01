@@ -27,11 +27,16 @@ body,
   height: 100%;
 }
 
-/* Range слайдер (Стъпка 1) — цветът се задава inline чрез accent-color
-   (цвета на сектора, §6). Тук само уголемяваме зоната за докосване. */
+/* Range слайдер (Стъпка 1). Персонализирана релса за КОНСИСТЕНТЕН вид при
+   всичките 7 слайдера: незапълнено = БЯЛО, запълнено + кръгче = цвят на
+   сферата. Цветът и запълването идват inline чрез CSS променливи
+   (--range-color, --range-fill). */
 input[type='range'].wol-range {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 1.7rem; /* мобилен: удобна зона за докосване */
+  background: transparent;
   cursor: pointer;
   touch-action: pan-y;
 }
@@ -39,6 +44,51 @@ input[type='range'].wol-range {
   input[type='range'].wol-range {
     height: 1.05rem; /* десктоп: по-компактно */
   }
+}
+
+/* ── WebKit/Blink: няма native „progress", затова рисуваме запълването с
+   градиент до --range-fill, а остатъкът е бял ── */
+input[type='range'].wol-range::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(46, 46, 46, 0.15);
+  background: linear-gradient(
+    to right,
+    var(--range-color, #9ca3af) 0 var(--range-fill, 50%),
+    #ffffff var(--range-fill, 50%) 100%
+  );
+}
+input[type='range'].wol-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px; /* центрира кръгчето спрямо релсата */
+  border-radius: 9999px;
+  background: var(--range-color, #9ca3af);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Firefox: track = бяло, native progress = цвят на сферата ── */
+input[type='range'].wol-range::-moz-range-track {
+  height: 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(46, 46, 46, 0.15);
+  background: #ffffff;
+}
+input[type='range'].wol-range::-moz-range-progress {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--range-color, #9ca3af);
+}
+input[type='range'].wol-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ffffff;
+  border-radius: 9999px;
+  background: var(--range-color, #9ca3af);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 body {

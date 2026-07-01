@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronRight } from 'lucide-react'
 import type { Sphere, SphereId } from '../types'
@@ -80,7 +81,12 @@ export default function AssessScreen({
                   onChange={(e) => onValueChange(s.id, Number(e.target.value))}
                   aria-label={s.label}
                   className="wol-range mt-0"
-                  style={{ accentColor: color }}
+                  style={
+                    {
+                      '--range-color': color,
+                      '--range-fill': `${(s.score / MAX_SCORE) * 100}%`,
+                    } as CSSProperties
+                  }
                 />
               </motion.li>
             )
