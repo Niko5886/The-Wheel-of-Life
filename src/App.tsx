@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import Step1Sliders from './components/Step1Sliders'
 import Step3Points from './components/Step3Points'
+import ResultPanel from './components/ResultPanel'
 import WheelSvg from './components/WheelSvg'
 import { createInitialSpheres } from './data/spheres'
 import type { SphereId, Step } from './types'
@@ -105,18 +106,7 @@ export default function App() {
               className="flex w-full max-w-xl flex-col items-center"
             >
               <WheelSvg spheres={spheres} mode="result" className="h-auto w-full" />
-              <p className="mt-3 max-w-md text-center text-sm text-ink/50">
-                Свързахме точките ти в колело. Рефлексивните въпроси идват в
-                следваща стъпка.
-              </p>
-              <button
-                type="button"
-                onClick={reset}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-2xl bg-white/70 px-5 py-2.5 font-heading font-bold text-ink shadow-soft transition hover:brightness-105 active:scale-[.98]"
-              >
-                <RotateCcw size={18} strokeWidth={2.5} />
-                Начертай отново
-              </button>
+              <ResultPanel onReset={reset} />
             </motion.section>
           )}
         </AnimatePresence>
