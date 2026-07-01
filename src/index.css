@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens (§6 в AGENT.md) ───────────────────────────── */
+:root {
+  --brand-green: #43a047; /* зелен акцент (лого, заглавия) */
+  --brand-red: #e94f37; /* червен акцент (заглавия, CTA) */
+  --brand-orange: #f5a623;
+  --brand-yellow: #f7e463;
+  --bg-soft: #fbfad1; /* меко жълто фон, като PDF-а */
+  --ink: #2e2e2e; /* основен текст */
+
+  /* Цветове на 7-те сектора */
+  --sphere-health: #e94f37;
+  --sphere-mind: #f5731f;
+  --sphere-relationships: #f5a623;
+  --sphere-time: #f7e463;
+  --sphere-mission: #c6e063;
+  --sphere-finance: #7fc241;
+  --sphere-joy: #43a047;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background-color: var(--bg-soft);
+  /* Fallback шрифт работи веднага, дори ако Google Fonts CDN не се зареди */
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
