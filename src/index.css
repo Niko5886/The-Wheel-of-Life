@@ -107,11 +107,24 @@ body {
   user-select: none;
 }
 
-/* ...но в полетата за въвеждане селекцията и каретката остават нормални */
-input,
-textarea {
+/* ...но в ТЕКСТОВИТЕ полета (напр. textarea за отговора) селекцията и
+   каретката остават нормални */
+textarea,
+input[type='text'],
+input[type='email'],
+input[type='search'],
+input[type='number'] {
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
+}
+
+/* Слайдерите НЕ показват текстова каретка/маркиране при клик (те са <input>,
+   но не са текстови полета) */
+input[type='range'].wol-range {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
