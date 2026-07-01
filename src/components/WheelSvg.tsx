@@ -1,13 +1,18 @@
+import { useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import { motion } from 'framer-motion'
-import type { Sphere } from '../types'
+import type { Sphere, SphereId } from '../types'
 import { SPHERES } from '../data/spheres'
 import {
   CENTER,
   MAX_RADIUS,
   axisAngle,
   axisEnd,
+  nearestAxisIndex,
   pointAt,
+  pointOnAxis,
+  polygonPath,
   radiusForValue,
+  scoreFromPoint,
   sectorPath,
 } from '../lib/geometry'
 
@@ -16,6 +21,8 @@ export type WheelMode = 'draw' | 'interactive' | 'result'
 interface WheelSvgProps {
   spheres: Sphere[]
   mode: WheelMode
+  /** Извиква се в режим 'interactive' при клик/drag по ос (нова стойност 0..10). */
+  onPointChange?: (id: SphereId, value: number) => void
   className?: string
 }
 
@@ -28,8 +35,16 @@ const TEN_RADIUS = MAX_RADIUS - 40
 /** Стойности за фините концентрични водещи кръгове (10 съвпада с външния ринг). */
 const GUIDE_VALUES = [2, 4, 6, 8]
 
-/** Цвят на сектора по id (§6). Scaffold-ът е статичен; scores не му трябват. */
+/** Цвят на сектора по id (§6). */
 const COLOR_BY_ID = new Map(SPHERES.map((s) => [s.id, s.color]))
+
+/** Преобразува екранни (client) координати в координати на viewBox-а. */
+function clientToSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
+  const ctm = svg.getScreenCTM()
+  if (!ctm) return null
+  const p = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse())
+  return { x: p.x, y: p.y }
+}
 
 /**
  * Разделя дълъг етикет на макс. 2 балансирани реда, за да се събере около
@@ -57,31 +72,107 @@ function wrapLabel(label: string): string[] {
 /**
  * SVG колелото (viewBox 600×600). Презентационен — приема сферите и режим.
  *
- * За СЕГА е имплементиран само scaffold-ът (режим 'draw' = Стъпка 2 от §4):
- * външен ринг, 7 равни сектора, радиални оси, скала 0 (център) → 10 (край),
- * етикети на секторите. Точките (Стъпка 3) и полигонът (Резултат) идват после.
+ *  • 'draw'        — Стъпка 2: scaffold, осите „израстват" от центъра.
+ *  • 'interactive' — Стъпка 3: точки по point-стойностите; клик/drag по ос
+ *                    → snap към 0..10 (чрез geometry.ts) → onPointChange.
+ *  • 'result'      — точките се свързват в затворен полигон с fill.
  */
-export default function WheelSvg({ spheres, mode, className }: WheelSvgProps) {
-  // В режим 'draw' осите „израстват" от центъра; иначе колелото е вече готово.
-  const animateGrow = mode === 'draw'
+export default function WheelSvg({
+  spheres,
+  mode,
+  onPointChange,
+  className,
+}: WheelSvgProps) {
+  const svgRef = useRef<SVGSVGElement>(null)
+  // Оста, която в момента се влачи (фиксира се при pointerdown, за да не „скача").
+  const draggingAxis = useRef<number | null>(null)
 
-  // Ъгъл по индекс + етикет (от spheres) + цвят (от SPHERES) — без ъгли „на ръка".
+  const animateGrow = mode === 'draw'
+  const isInteractive = mode === 'interactive'
+  const showPoints = mode !== 'draw'
+  const showPolygon = mode === 'result'
+
+  // Ъгъл по индекс + етикет/цвят/point — без ъгли „на ръка".
   const axes = spheres.map((s, i) => ({
     i,
+    id: s.id,
     label: s.label,
+    point: s.point,
     color: COLOR_BY_ID.get(s.id) ?? '#9CA3AF',
     end: axisEnd(i),
     labelPos: pointAt(axisAngle(i), LABEL_RADIUS),
     tenPos: pointAt(axisAngle(i), TEN_RADIUS),
   }))
 
+  // Клик/drag: определя оста (най-близката при клик; фиксираната при drag),
+  // snap-ва радиуса към 0..10 и вдига onPointChange.
+  const applyAt = (
+    clientX: number,
+    clientY: number,
+    forcedAxis: number | null,
+  ): number | null => {
+    const svg = svgRef.current
+    if (!svg || !onPointChange) return null
+    const p = clientToSvgPoint(svg, clientX, clientY)
+    if (!p) return null
+    const i = forcedAxis ?? nearestAxisIndex(p.x, p.y)
+    onPointChange(spheres[i].id, scoreFromPoint(i, p.x, p.y))
+    return i
+  }
+
+  const handlePointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (!isInteractive) return
+    e.preventDefault()
+    const i = applyAt(e.clientX, e.clientY, null)
+    if (i != null) {
+      draggingAxis.current = i
+      try {
+        svgRef.current?.setPointerCapture(e.pointerId)
+      } catch {
+        /* недостъпен/синтетичен pointer — drag ще работи и без capture */
+      }
+    }
+  }
+
+  const handlePointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (!isInteractive || draggingAxis.current == null) return
+    e.preventDefault()
+    applyAt(e.clientX, e.clientY, draggingAxis.current)
+  }
+
+  const endDrag = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (draggingAxis.current == null) return
+    draggingAxis.current = null
+    try {
+      svgRef.current?.releasePointerCapture(e.pointerId)
+    } catch {
+      /* pointer вече е освободен */
+    }
+  }
+
   return (
     <svg
+      ref={svgRef}
       viewBox={`0 0 ${VIEW} ${VIEW}`}
       className={className}
       role="img"
       aria-label="Колело на живота — кръг, разделен на 7 равни сектора"
+      style={isInteractive ? { touchAction: 'none' } : undefined}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
     >
+      {showPolygon && (
+        <defs>
+          <linearGradient id="wol-wheel-fill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#E94F37" />
+            <stop offset="45%" stopColor="#F5A623" />
+            <stop offset="100%" stopColor="#43A047" />
+          </linearGradient>
+        </defs>
+      )}
+
       {/* 1) Оцветени клинове — 7-те РАВНИ сектора (фон) */}
       <motion.g
         initial={animateGrow ? { opacity: 0 } : false}
@@ -128,7 +219,7 @@ export default function WheelSvg({ spheres, mode, className }: WheelSvgProps) {
         />
       </motion.g>
 
-      {/* 3) Радиалните оси — „израстват" от центъра навън (Framer Motion) */}
+      {/* 3) Радиалните оси — в 'draw' „израстват" от центъра навън */}
       {axes.map(({ i, color, end }) => (
         <motion.line
           key={`axis-${i}`}
@@ -148,30 +239,80 @@ export default function WheelSvg({ spheres, mode, className }: WheelSvgProps) {
         />
       ))}
 
-      {/* 4) Числото „10" в горния край на всяка ос (фоново хало за четимост) */}
-      {axes.map(({ i, tenPos }) => (
-        <motion.g
-          key={`ten-${i}`}
-          initial={animateGrow ? { opacity: 0 } : false}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.95 + i * 0.04, duration: 0.3 }}
-        >
-          <circle cx={tenPos.x} cy={tenPos.y} r={10} className="fill-softbg" />
-          <text
-            x={tenPos.x}
-            y={tenPos.y}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={11}
-            fontWeight={700}
-            className="fill-ink/70"
-          >
-            10
-          </text>
-        </motion.g>
-      ))}
+      {/* 4) Полигон (само в 'result') — свързва точките в затворена фигура */}
+      {showPolygon && (
+        <motion.path
+          d={polygonPath(spheres.map((s) => s.point))}
+          fill="url(#wol-wheel-fill)"
+          stroke="#2E2E2E"
+          strokeOpacity={0.55}
+          strokeWidth={2.5}
+          strokeLinejoin="round"
+          initial={{ pathLength: 0, fillOpacity: 0 }}
+          animate={{ pathLength: 1, fillOpacity: 0.28 }}
+          transition={{
+            pathLength: { duration: 0.9, ease: 'easeInOut' },
+            fillOpacity: { delay: 0.7, duration: 0.5 },
+          }}
+        />
+      )}
 
-      {/* 5) Числото „0" в центъра (общ произход на всичките 7 оси) */}
+      {/* 5) Точки — в 'interactive' и 'result'; позиция по point-стойността */}
+      {showPoints &&
+        axes.map(({ i, id, color, point }) => {
+          const p = pointOnAxis(i, point)
+          return (
+            <motion.circle
+              key={`point-${i}`}
+              data-testid={`point-${id}`}
+              cx={p.x}
+              cy={p.y}
+              r={9}
+              fill={color}
+              stroke="#ffffff"
+              strokeWidth={2.5}
+              style={{
+                transformBox: 'fill-box',
+                transformOrigin: 'center',
+                cursor: isInteractive ? 'grab' : 'default',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.28))',
+              }}
+              whileHover={isInteractive ? { scale: 1.3 } : undefined}
+              whileTap={isInteractive ? { scale: 0.92 } : undefined}
+              initial={showPolygon ? { scale: 0, opacity: 0 } : false}
+              animate={showPolygon ? { scale: 1, opacity: 1 } : undefined}
+              transition={{ delay: showPolygon ? 0.6 + i * 0.05 : 0, duration: 0.3 }}
+            />
+          )
+        })}
+
+      {/* 6) Числото „10" на всяка ос — само в 'draw' (Стъпка 2). В
+          'interactive'/'result' точките заемат това място; скалата се
+          подсказва от водещите кръгове + „0" в центъра. */}
+      {animateGrow &&
+        axes.map(({ i, tenPos }) => (
+          <motion.g
+            key={`ten-${i}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.95 + i * 0.04, duration: 0.3 }}
+          >
+            <circle cx={tenPos.x} cy={tenPos.y} r={10} className="fill-softbg" />
+            <text
+              x={tenPos.x}
+              y={tenPos.y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={11}
+              fontWeight={700}
+              className="fill-ink/70"
+            >
+              10
+            </text>
+          </motion.g>
+        ))}
+
+      {/* 7) Числото „0" в центъра (общ произход на всичките 7 оси) */}
       <motion.g
         initial={animateGrow ? { opacity: 0 } : false}
         animate={{ opacity: 1 }}
@@ -191,7 +332,7 @@ export default function WheelSvg({ spheres, mode, className }: WheelSvgProps) {
         </text>
       </motion.g>
 
-      {/* 6) Етикет с името на всяка сфера — извън сектора */}
+      {/* 8) Етикет с името на всяка сфера — извън сектора */}
       {axes.map(({ i, label, labelPos }) => {
         const lines = wrapLabel(label)
         return (
