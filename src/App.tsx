@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import Step1Sliders from './components/Step1Sliders'
 import Step3Points from './components/Step3Points'
 import ResultPanel from './components/ResultPanel'
+import StepIndicator from './components/StepIndicator'
+import Footer from './components/Footer'
 import WheelSvg from './components/WheelSvg'
 import { createInitialSpheres } from './data/spheres'
 import type { SphereId, Step } from './types'
@@ -36,11 +38,13 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-gradient-to-br from-brand-yellow/50 via-softbg to-brand-green/10 px-4 py-10">
-      <header className="mb-8 text-center">
-        <h1 className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-green bg-clip-text font-heading text-3xl font-extrabold uppercase tracking-tight text-transparent md:text-5xl">
+      <header className="mb-6 text-center">
+        <h1 className="bg-gradient-to-r from-brand-red via-brand-orange to-brand-green bg-clip-text font-heading text-3xl font-extrabold uppercase leading-tight tracking-tight text-transparent md:text-5xl">
           Колелото на живота
         </h1>
       </header>
+
+      <StepIndicator step={step} />
 
       <main className="flex w-full flex-1 flex-col items-center">
         <AnimatePresence mode="wait">
@@ -111,6 +115,8 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+
+      <Footer />
     </div>
   )
 }
